@@ -996,8 +996,8 @@ def train():
             train_file_key = f'{args.run_name}/train_results.json'
             s3.upload_file(train_file_path, args.aws_s3_bucket, train_file_key)
 
-            train_state_file_path = os.path.join(args.output_dir, "trainer_state_results.json")
-            train_state_file_key = f'{args.run_name}/trainer_state_results.json'
+            train_state_file_path = os.path.join(args.output_dir, "trainer_state.json")
+            train_state_file_key = f'{args.run_name}/trainer_state.json'
             s3.upload_file(train_state_file_path, args.aws_s3_bucket, train_state_file_key)
         
         if (args.do_eval):
