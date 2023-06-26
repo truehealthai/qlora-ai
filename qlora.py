@@ -309,12 +309,17 @@ class SavePeftModelCallback(transformers.TrainerCallback):
 
         s3_bucket = args.aws_s3_bucket
         s3_model_key_prefix = f"{args.run_name}/{PREFIX_CHECKPOINT_DIR}-{state.global_step}/adapter_model"
+        
+        # Upload training args
+        training_args_file_path = f"{checkpoint_folder}/training_args.bin"
+        training_args_file_key = f"{args.run_name}/checkpoints/{PREFIX_CHECKPOINT_DIR}-{state.global_step}/training_args.bin"
+        s3.upload_file(training_args_file_path, s3_bucket, training_args_file_key)
 
         for root, dirs, files in os.walk(peft_model_path):
             for file in files:
                 local_file = os.path.join(root, file)
                 s3_file = os.path.join(s3_model_key_prefix, local_file[len(peft_model_path):])
-                s3_file_key = f"{args.run_name}/{PREFIX_CHECKPOINT_DIR}-{state.global_step}/adapter_model{s3_file}"
+                s3_file_key = f"{args.run_name}/checkpoints/{PREFIX_CHECKPOINT_DIR}-{state.global_step}/adapter_model{s3_file}"
                 print(local_file)
                 print(s3_file)
                 print(s3_file_key)
@@ -964,9 +969,42 @@ def train():
         trainer.save_metrics("predict", prediction_metrics)
         all_metrics.update(prediction_metrics)
 
+    s3 = boto3.client(
+        's3',
+        aws_access_key_id=args.aws_access_key,
+        aws_secret_access_key=args.aws_secret_key
+    )
+    
+    args_to_save = open(os.path.join(args.output_dir, 'run_params.txt'), "w")
+    args_to_save.write(str(args))
+    s3.upload_file(os.path.join(args.output_dir, 'run_params.txt'), args.aws_s3_bucket, f'{args.run_name}/run_params.txt')
+
     if (args.do_train or args.do_eval or args.do_predict):
         with open(os.path.join(args.output_dir, "metrics.json"), "w") as fout:
             fout.write(json.dumps(all_metrics))
+
+        metrics_file_path = os.path.join(args.output_dir, "metrics.json")
+        metris_file_key = f'{args.run_name}/metrics.json'
+        s3.upload_file(metrics_file_path, args.aws_s3_bucket, metris_file_key)
+
+        all_results_file_path = os.path.join(args.output_dir, "all_results.json")
+        all_results_file_key = f'{args.run_name}/all_results.json'
+        s3.upload_file(all_results_file_path, args.aws_s3_bucket, all_results_file_key)
+
+        if (args.do_train):
+            train_file_path = os.path.join(args.output_dir, "train_results.json")
+            train_file_key = f'{args.run_name}/train_results.json'
+            s3.upload_file(train_file_path, args.aws_s3_bucket, train_file_key)
+
+            train_state_file_path = os.path.join(args.output_dir, "trainer_state_results.json")
+            train_state_file_key = f'{args.run_name}/trainer_state_results.json'
+            s3.upload_file(train_state_file_path, args.aws_s3_bucket, train_state_file_key)
+        
+        if (args.do_eval):
+            eval_file_path = os.path.join(args.output_dir, "eval_results.json")
+            eval_file_key = f'{args.run_name}/eval_results.json'
+            s3.upload_file(eval_file_path, args.aws_s3_bucket, eval_file_key)
+            
 
 
 if __name__ == "__main__":
