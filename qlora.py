@@ -640,11 +640,11 @@ def make_data_module(tokenizer: transformers.PreTrainedTokenizer, args) -> Dict:
         elif dataset_name == 'oasst1':
             return load_dataset("timdettmers/openassistant-guanaco")
         elif dataset_name == 'truehealthai':
-            return load_dataset("aldrinc/TrueHealthQA")
+            return load_dataset("truehealth/TrueHealthQA")
         elif dataset_name == 'truehealthai-mini':
-            return load_dataset("aldrinc/TrueHealthQA_Mini")
+            return load_dataset("truehealth/TrueHealthQA_Mini")
         elif dataset_name == 'truehealthai-instruct':
-            return load_dataset("aldrinc/TrueHealthQA_Instruct")
+            return load_dataset("truehealth/TrueHealthQA_Instruct")
         elif dataset_name == 'truehealthchat-mini':
             if hasattr(args, 'hf_access_token') and args.hf_access_token:
                 return load_dataset("truehealth/TrueHealthChat-Mini", use_auth_token=args.hf_access_token)
