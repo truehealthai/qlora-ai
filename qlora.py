@@ -315,11 +315,11 @@ class SavePeftModelCallback(transformers.TrainerCallback):
         training_args_file_key = f"{args.run_name}/checkpoints/{PREFIX_CHECKPOINT_DIR}-{state.global_step}/training_args.bin"
         s3.upload_file(training_args_file_path, s3_bucket, training_args_file_key)
 
-        for root, dirs, files in os.walk(peft_model_path):
+        for root, dirs, files in os.walk(checkpoint_folder):
             for file in files:
                 local_file = os.path.join(root, file)
                 s3_file = os.path.join(s3_model_key_prefix, local_file[len(peft_model_path):])
-                s3_file_key = f"{args.run_name}/checkpoints/{PREFIX_CHECKPOINT_DIR}-{state.global_step}/adapter_model{s3_file}"
+                s3_file_key = f"{args.run_name}/checkpoints/{PREFIX_CHECKPOINT_DIR}-{state.global_step}{s3_file}"
                 print(local_file)
                 print(s3_file)
                 print(s3_file_key)
