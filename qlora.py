@@ -318,7 +318,7 @@ class SavePeftModelCallback(transformers.TrainerCallback):
         for root, dirs, files in os.walk(checkpoint_folder):
             for file in files:
                 local_file = os.path.join(root, file)
-                s3_file = os.path.join(s3_model_key_prefix, local_file[len(peft_model_path):])
+                s3_file = os.path.join(s3_model_key_prefix, local_file[len(checkpoint_folder):])
                 s3_file_key = f"{args.run_name}/checkpoints/{PREFIX_CHECKPOINT_DIR}-{state.global_step}{s3_file}"
                 print(local_file)
                 print(s3_file)
