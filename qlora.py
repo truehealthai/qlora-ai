@@ -60,11 +60,6 @@ class ModelArguments:
         metadata={
             "help": "Enable unpickling of arbitrary code in AutoModelForCausalLM#from_pretrained."}
     )
-    use_auth_token: Optional[bool] = field(
-        default=False,
-        metadata={
-            "help": "Enables using Huggingface auth token from Git Credentials."}
-    )
 
 
 @dataclass
@@ -384,7 +379,6 @@ def get_accelerate_model(args, checkpoint_dir):
         torch_dtype=(torch.float32 if args.fp16 else (
             torch.bfloat16 if args.bf16 else torch.float32)),
         trust_remote_code=args.trust_remote_code,
-        use_auth_token=args.use_auth_token
     )
     if compute_dtype == torch.float16 and args.bits == 4:
         major, minor = torch.cuda.get_device_capability()
@@ -646,7 +640,10 @@ def make_data_module(tokenizer: transformers.PreTrainedTokenizer, args) -> Dict:
         elif dataset_name == 'truehealthai-instruct':
             return load_dataset("truehealth/TrueHealthQA_Instruct")
         elif dataset_name == 'truehealthai-translate':
-            return load_dataset("truehealth/truehealth-translate")
+            if hasattr(args, 'hf_access_token') and args.hf_access_token:
+                return load_dataset("truehealth/truehealth-translate", use_auth_token=args.hf_access_token)
+            else:
+                raise ValueError("hf_access_token is required for dataset 'truehealth-translate'")
         elif dataset_name == 'truehealthchat-mini':
             if hasattr(args, 'hf_access_token') and args.hf_access_token:
                 return load_dataset("truehealth/TrueHealthChat-Mini", use_auth_token=args.hf_access_token)
@@ -709,6 +706,11 @@ def make_data_module(tokenizer: transformers.PreTrainedTokenizer, args) -> Dict:
                 'output': x['text'],
             })
         elif dataset_format is None and args.dataset == 'truehealthchat-mini':
+            dataset = dataset.map(lambda x: {
+                'input': '',
+                'output': x['text'],
+            })
+        elif dataset_format is None and args.dataset == 'truehealthai-translate':
             dataset = dataset.map(lambda x: {
                 'input': '',
                 'output': x['text'],
